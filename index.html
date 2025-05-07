@@ -1,0 +1,650 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pizza Haven</title>
+  <style>
+    :root {
+      --primary: #d62828;
+      --secondary: #fcbf49;
+      --bg: #fff8e1;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: inline-block;
+      margin: 10px 0 5px;
+    }
+
+    select, input[type="number"], input[type="checkbox"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #a61c1c;
+    }
+
+    .total {
+      background: var(--secondary);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: black;
+      margin-top: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .meal-group, .app-group, .des-group, .bev-group {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+    <h1>Welcome to The Pizza Haven</h1>
+
+    <div class="section">
+      <label for="distance">Enter distance from restaurant (km):</label>
+      <input type="number" id="distance" min="0"/>
+      <button onclick="checkDelivery()">Check Delivery</button>
+      <p id="deliveryInfo"></p>
+    </div>
+  
+    <form id="pizzaForm" class="hidden">
+      <div class="section">
+        <p>Would you like to order a pizza?</p>
+        <button type="button" onclick="order()">Yes</button>
+        <button type="button" onclick="declineOrder()">No</button>
+      </div>
+    </form>
+  
+    <form id="orderForm" class="hidden">
+      <div class="section">
+        <h3>Meals</h3>
+        <div id="mealContainer">
+          <div class="meal-group">
+            <label>Meal:</label>
+            <select class="meal">
+              <option value="">None</option>
+              <option value="pizza">Pizza - $18.99</option>
+              <option value="calzone">Calzone - $12.99</option>
+            </select>
+            <label>Qty:</label>
+            <input type="number" class="mealQty" value="1" min="1"/>
+            <label>Vegan?</label>
+            <input type="checkbox" class="vegan"/>
+          </div>
+        </div>
+        <button type="button" onclick="addMeal()">+ Add Another </button>
+      </div>
+  
+      <div class="section">
+          <h3>Appetizer</h3>
+          <div id="appContainer">
+            <div class="app-group">
+              <label>Appetizer</label>
+              <select id="appetizer">
+                  <option value="">None</option>
+                  <option value="cheese">Cheese Bread - $5.99</option>
+                  <option value="garlic">Garlic Bread - $4.99</option>
+                </select>
+              <label>Qty:</label>
+              <input type="number" class="appQty" value="1" min="1"/>
+            </div>
+          </div>
+          <button type="button" onclick="addapp()">+ Add Another</button>
+        </div>
+  
+        <div class="section">
+          <h3>Dessert</h3>
+          <div id="desContainer">
+            <div class="des-group">
+              <label>Dessert</label>
+              <select id="dessert">
+                  <option value="">None</option>
+                  <option value="cinnamon">Cinnamon Sticks - $3.59</option>
+                  <option value="cookies">Cookies - $3.59</option>
+                </select>
+              <label>Qty:</label>
+              <input type="number" class="appQty" value="1" min="1"/>
+            </div>
+          </div>
+          <button type="button" onclick="adddes()">+ Add Another </button>
+        </div>
+  
+        <div class="section">
+          <h3>Beverages</h3>
+          <div id="bevContainer">
+            <div class="bev-group">
+              <label>Beverages</label>
+              <select id="beverage">
+                  <option value="">None</option>
+                  <option value="pop">Pop - $2.00</option>
+                  <option value="water">Bottled Water - $1.50</option>
+                </select>
+              <label>Qty:</label>
+              <input type="number" class="appQty" value="1" min="1"/>
+            </div>
+          </div>
+          <button type="button" onclick="addbev()">+ Add Another </button>
+        </div>
+  
+  
+  
+      <div class="section">
+        <label>Tip %:</label>
+        <input type="number" id="tip" value="10" min="0"/>
+      </div>
+  
+      <button type="button" onclick="calculateTotal()">Calculate Total</button>
+      <div class="total" id="output"></div>
+    </form>
+
+  <script>
+    // JavaScript to handle calculation and dynamic field generation
+
+    const PRICES = {
+      pizza: 18.99,
+      calzone: 12.99,
+      vegan: 2.50,
+      cheese: 5.99,
+      garlic: 4.99,
+      cinnamon: 3.59,
+      cookies: 3.59,
+      pop: 2.00,
+      water: 1.50,
+      tax: 0.13,
+      delivery: 5.99
+    };
+
+    let deliveryCharge = 0;
+
+    function checkDelivery() {
+      const dist = parseInt(document.getElementById('distance').value);
+      const info = document.getElementById('deliveryInfo');
+      const form = document.getElementById('pizzaForm');
+
+      if (dist <= 10) {
+        deliveryCharge = PRICES.delivery;
+      } else if (dist <= 19) {
+        deliveryCharge = PRICES.delivery + 2;
+      } else if (dist <= 29) {
+        deliveryCharge = PRICES.delivery + 4;
+      } else {
+        info.textContent = 'Sorry, we do not deliver that far.';
+        form.classList.add('hidden');
+        return;
+      }
+      info.textContent = `Delivery available. Charge: $${deliveryCharge.toFixed(2)}`;
+      form.classList.remove('hidden');
+    }
+
+    function order() {
+      document.getElementById('orderForm').classList.remove('hidden');
+    }
+
+    function declineOrder() {
+      document.getElementById('orderForm').classList.add('hidden');
+    }
+
+    function addMeal() {
+      const container = document.getElementById('mealContainer');
+      const mealGroup = document.createElement('div');
+      mealGroup.className = 'meal-group';
+      mealGroup.innerHTML = `
+        <label>Meal:</label>
+        <select class="meal">
+          <option value="">None</option>
+          <option value="pizza">Pizza - $18.99</option>
+          <option value="calzone">Calzone - $12.99</option>
+        </select>
+        <label>Qty:</label>
+        <input type="number" class="mealQty" value="1" min="1"/>
+        <label>Vegan?</label>
+        <input type="checkbox" class="vegan"/>
+      `;
+      container.appendChild(mealGroup);
+    }
+
+    function addapp() {
+      const container = document.getElementById('appContainer');
+      const appGroup = document.createElement('div');
+      appGroup.className = 'app-group';
+      appGroup.innerHTML = `
+        <label>Appetizer</label>
+        <select class="appetizer">
+          <option value="">None</option>
+          <option value="cheese">Cheese Bread - $5.99</option>
+          <option value="garlic">Garlic Bread - $4.99</option>
+        </select>
+        <label>Qty:</label>
+        <input type="number" class="appQty" value="1" min="1"/>
+      `;
+      container.appendChild(appGroup);
+    }
+
+    function adddes() {
+      const container = document.getElementById('desContainer');
+      const desGroup = document.createElement('div');
+      desGroup.className = 'des-group';
+      desGroup.innerHTML = `
+        <label>Dessert</label>
+        <select class="dessert">
+          <option value="">None</option>
+          <option value="cinnamon">Cinnamon Sticks - $3.59</option>
+          <option value="cookies">Cookies - $3.59</option>
+        </select>
+        <label>Qty:</label>
+        <input type="number" class="desQty" value="1" min="1"/>
+      `;
+      container.appendChild(desGroup);
+    }
+
+    function addbev() {
+      const container = document.getElementById('bevContainer');
+      const bevGroup = document.createElement('div');
+      bevGroup.className = 'bev-group';
+      bevGroup.innerHTML = `
+        <label>Beverages</label>
+        <select class="beverage">
+          <option value="">None</option>
+          <option value="pop">Pop - $2.00</option>
+          <option value="water">Bottled Water - $1.50</option>
+        </select>
+        <label>Qty:</label>
+        <input type="number" class="bevQty" value="1" min="1"/>
+      `;
+      container.appendChild(bevGroup);
+    }
+
+    function calculateTotal() {
+      let subtotal = 0;
+
+      document.querySelectorAll('.meal-group').forEach(group => {
+        const meal = group.querySelector('.meal').value;
+        const qty = parseInt(group.querySelector('.mealQty').value);
+        const vegan = group.querySelector('.vegan').checked;
+        if (meal) {
+          subtotal += PRICES[meal] * qty;
+          if (vegan) subtotal += PRICES.vegan * qty;
+        }
+      });
+
+      document.querySelectorAll('.app-group').forEach(group => {
+        const app = group.querySelector('.appetizer').value;
+        const qty = parseInt(group.querySelector('.appQty').value);
+        if (app) subtotal += PRICES[app] * qty;
+      });
+
+      document.querySelectorAll('.des-group').forEach(group => {
+        const des = group.querySelector('.dessert').value;
+        const qty = parseInt(group.querySelector('.desQty').value);
+        if (des) subtotal += PRICES[des] * qty;
+      });
+
+      document.querySelectorAll('.bev-group').forEach(group => {
+        const bev = group.querySelector('.beverage').value;
+        const qty = parseInt(group.querySelector('.bevQty').value);
+        if (bev) subtotal += PRICES[bev] * qty;
+      });
+
+      const tipPercent = parseInt(document.getElementById('tip').value) || 0;
+      const tipAmount = subtotal * (tipPercent / 100);
+      const taxAmount = subtotal * PRICES.tax;
+      const total = subtotal + tipAmount + taxAmount + deliveryCharge;
+
+      document.getElementById('output').innerHTML = `
+        Subtotal: $${subtotal.toFixed(2)}<br>
+        Tip: $${tipAmount.toFixed(2)}<br>
+        Tax: $${taxAmount.toFixed(2)}<br>
+        Delivery: $${deliveryCharge.toFixed(2)}<br>
+        <strong>Total: $${total.toFixed(2)}</strong>
+      `;
+    }
+  </script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pizza Haven</title>
+  <style>
+    :root {
+      --primary: #d62828; /* Pizza Red */
+      --secondary: #fcbf49; /* Cheese Yellow */
+      --bg: #fff8e1;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: inline-block;
+      margin: 10px 0 5px;
+    }
+
+    select, input[type="number"], input[type="checkbox"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: auto;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #a61c1c;
+    }
+
+    .total {
+      background: var(--secondary);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: black;
+      margin-top: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .meal-group {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to The Pizza Haven</h1>
+
+  <div class="section">
+    <label for="distance">Enter distance from restaurant (km):</label>
+    <input type="number" id="distance" min="0"/>
+    <button onclick="checkDelivery()">Check Delivery</button>
+    <p id="deliveryInfo"></p>
+  </div>
+
+  <form id="pizzaForm" class="hidden">
+    <div class="section">
+      <p>Would you like to order a pizza?</p>
+      <button type="button" onclick="order()">Yes</button>
+      <button type="button" onclick="declineOrder()">No</button>
+    </div>
+  </form>
+
+  <form id="orderForm" class="hidden">
+    <div class="section">
+      <h3>Meals</h3>
+      <div id="mealContainer">
+        <div class="meal-group">
+          <label>Meal:</label>
+          <select class="meal">
+            <option value="">None</option>
+            <option value="pizza">Pizza - $18.99</option>
+            <option value="calzone">Calzone - $12.99</option>
+          </select>
+          <label>Qty:</label>
+          <input type="number" class="mealQty" value="1" min="1"/>
+          <label>Vegan?</label>
+          <input type="checkbox" class="vegan"/>
+        </div>
+      </div>
+      <button type="button" onclick="addMeal()">+ Add Another Meal</button>
+    </div>
+
+    <div class="section">
+      <h3>Appetizer</h3>
+      <select id="appetizer">
+        <option value="">None</option>
+        <option value="cheese">Cheese Bread - $5.99</option>
+        <option value="garlic">Garlic Bread - $4.99</option>
+      </select>
+      <label>Qty:</label>
+      <input type="number" id="appQty" value="1" min="1"/>
+    </div>
+
+    <div class="section">
+      <h3>Dessert</h3>
+      <select id="dessert">
+        <option value="">None</option>
+        <option value="cinnamon">Cinnamon Sticks - $3.59</option>
+        <option value="cookies">Cookies - $3.59</option>
+      </select>
+      <label>Qty:</label>
+      <input type="number" id="dessertQty" value="1" min="1"/>
+    </div>
+
+    <div class="section">
+      <h3>Beverages</h3>
+      <select id="beverage">
+        <option value="">None</option>
+        <option value="pop">Pop - $2.00</option>
+        <option value="water">Bottled Water - $1.50</option>
+      </select>
+      <label>Qty:</label>
+      <input type="number" id="bevQty" value="1" min="1"/>
+    </div>
+
+    <div class="section">
+      <label>Tip %:</label>
+      <input type="number" id="tip" value="10" min="0"/>
+    </div>
+
+    <button type="button" onclick="calculateTotal()">Calculate Total</button>
+    <div class="total" id="output"></div>
+  </form>
+
+  <script>
+    const PRICES = {
+      pizza: 18.99,
+      calzone: 12.99,
+      vegan: 2.50,
+      cheese: 5.99,
+      garlic: 4.99,
+      cinnamon: 3.59,
+      cookies: 3.59,
+      pop: 2.00,
+      water: 1.50,
+      tax: 0.13,
+      delivery: 5.99,
+      surcharge: 2.00
+    };
+
+    let deliveryCharge = 0;
+
+    function checkDelivery() {
+      const dist = parseInt(document.getElementById('distance').value);
+      const info = document.getElementById('deliveryInfo');
+      const form = document.getElementById('pizzaForm');
+
+      if (dist <= 10) {
+        deliveryCharge = PRICES.delivery;
+      } else if (dist <= 19) {
+        deliveryCharge = PRICES.delivery + 2;
+      } else if (dist <= 29) {
+        deliveryCharge = PRICES.delivery + 4;
+      } else {
+        info.textContent = 'Sorry, we do not deliver that far.';
+        form.classList.add('hidden');
+        return;
+      }
+      info.textContent = `Delivery available. Charge: $${deliveryCharge.toFixed(2)}`;
+      form.classList.remove('hidden');
+    }
+
+    function order() {
+      document.getElementById('orderForm').classList.remove('hidden');
+    }
+
+    function declineOrder() {
+      document.getElementById('orderForm').classList.add('hidden');
+    }
+
+    function addMeal() {
+      const container = document.getElementById('mealContainer');
+      const mealGroup = document.createElement('div');
+      mealGroup.className = 'meal-group';
+      mealGroup.innerHTML = `
+        <label>Meal:</label>
+        <select class="meal">
+          <option value="">None</option>
+          <option value="pizza">Pizza - $18.99</option>
+          <option value="calzone">Calzone - $12.99</option>
+        </select>
+        <label>Qty:</label>
+        <input type="number" class="mealQty" value="1" min="1"/>
+        <label>Vegan?</label>
+        <input type="checkbox" class="vegan"/>
+      `;
+      container.appendChild(mealGroup);
+    }
+
+    function calculateTotal() {
+      let subtotal = 0;
+      let orderedMeal = false, orderedApp = false, orderedDessert = false, orderedBev = false;
+
+      // Multiple meals
+      const meals = document.querySelectorAll('.meal');
+      const qtys = document.querySelectorAll('.mealQty');
+      const vegans = document.querySelectorAll('.vegan');
+      for (let i = 0; i < meals.length; i++) {
+        const mealVal = meals[i].value;
+        const qty = parseInt(qtys[i].value);
+        const vegan = vegans[i].checked;
+
+        if (mealVal) {
+          orderedMeal = true;
+          subtotal += PRICES[mealVal] * qty;
+          if (vegan) subtotal += PRICES.vegan;
+        }
+      }
+
+      let appetizer = document.getElementById('appetizer').value;
+      let appQty = parseInt(document.getElementById('appQty').value);
+      if (appetizer) {
+        orderedApp = true;
+        subtotal += PRICES[appetizer] * appQty;
+      }
+
+      let dessert = document.getElementById('dessert').value;
+      let dessertQty = parseInt(document.getElementById('dessertQty').value);
+      if (dessert) {
+        orderedDessert = true;
+        subtotal += PRICES[dessert] * dessertQty;
+      }
+
+      let beverage = document.getElementById('beverage').value;
+      let bevQty = parseInt(document.getElementById('bevQty').value);
+      if (beverage) {
+        orderedBev = true;
+        subtotal += PRICES[beverage] * bevQty;
+      }
+
+      let discount = 0;
+      if (orderedMeal && orderedApp && orderedDessert && orderedBev) {
+        discount = 0.2;
+        alert("You get a 20% Dinner Combo Discount!");
+      } else if (orderedMeal && orderedBev) {
+        discount = 0.1;
+        alert("You get a 10% Meal & Drink Combo Discount!");
+      }
+
+      subtotal -= subtotal * discount;
+      let tax = subtotal * PRICES.tax;
+      let tipPercent = parseFloat(document.getElementById('tip').value);
+      let tip = subtotal * (tipPercent / 100);
+      let total = subtotal + tax + tip + deliveryCharge;
+
+      document.getElementById('output').innerHTML = `
+        Subtotal: $${subtotal.toFixed(2)}<br>
+        Tax: $${tax.toFixed(2)}<br>
+        Tip: $${tip.toFixed(2)}<br>
+        Delivery: $${deliveryCharge.toFixed(2)}<br>
+        <strong>Total: $${total.toFixed(2)}</strong>
+      `;
+    }
+  </script>
+</body>
+</html>
